@@ -1,0 +1,21 @@
+{
+  "name": "simple-dialogue",
+  "description": "A dead simple branching dialogue system written in javascript for RPG and visual novel games",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack",
+    "test": "mocha --require @babel/register --recursive"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "@babel/register": "^7.15.3",
+    "babel-loader": "^8.2.2",
+    "chai": "^4.3.4",
+    "mocha": "^9.1.3",
+    "webpack": "^5.58.2",
+    "webpack-cli": "^4.9.0"
+  }
+}
