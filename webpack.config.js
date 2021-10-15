@@ -1,3 +1,5 @@
+const CompressionPlugin = require('compression-webpack-plugin')
+const zlib = require('zlib')
 const path = require('path')
 
 module.exports = {
@@ -8,6 +10,26 @@ module.exports = {
     library: '$',
     libraryTarget: 'umd',
   },
+  plugins: [
+    new CompressionPlugin({
+      filename: '[path][base].gz',
+      algorithm: 'gzip',
+      test: /\.(js)$/,
+      threshold: 1,
+      minRatio: Infinity,
+    }),
+    new CompressionPlugin({
+      filename: '[path][base].br',
+      algorithm: 'brotliCompress',
+      test: /\.(js)$/,
+      compressionOptions: {
+        [zlib.constants.BROTLI_PARAM_QUALITY]: 11
+      },
+      threshold: 1,
+      minRatio: Infinity,
+      deleteOriginalAssets: false
+    }
+  )],
   module: {
     rules: [
       {
@@ -17,5 +39,5 @@ module.exports = {
       },
     ],
   },
-  mode: 'development',
+  mode: 'production',
 }
