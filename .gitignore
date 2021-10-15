@@ -1,4 +1,18 @@
+.env
+.env.test
+
+.next/
+
+.cache/
+
 .idea
+.vscode/
+
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 dist
 node_modules
