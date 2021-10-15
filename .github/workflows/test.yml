@@ -33,3 +33,9 @@ jobs:
         run: npm install
       - name: Start Mocha Test Runner
         run: npm run test
+      - name: Test & publish code coverage
+        uses: paambaati/codeclimate-action@v3.0.0
+        env:
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+        with:
+          coverageCommand: npm run coverage
