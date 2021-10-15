@@ -1,31 +1,34 @@
-import {fastFilter, fastFind} from './util'
+import { fastFilter, fastFind } from './util'
 
 const dialogues = {}
 const states = {}
 
-function getDialogueWithPrompts (npc, dialogue) {
-  if (dialogue.choices.length) {
-    dialogue.prompts = fastFilter(dialogues[npc], (d) => dialogue.choices.includes(d.id))
+function getDialogueWithPrompts(npc, dialogue) {
+  const clonedDialogue = { ...dialogue }
+  if (clonedDialogue.choices.length) {
+    clonedDialogue.prompts = fastFilter(dialogues[npc],
+      (d) => clonedDialogue.choices.includes(d.id))
   }
-  return dialogue
+  return clonedDialogue
 }
 
-const passPrereq = (npc, dialogue) => (dialogue.pre ? dialogue.pre() : true)
+const passPrereq = (dialogue) => (dialogue.pre ? dialogue.pre() : true)
 const getDialogue = (npc, id) => (fastFind(dialogues[npc], 'id', id))
 
-function speakCurrentDialogue (npc) {
+function speakCurrentDialogue(npc) {
   const currentDialogue = getDialogue(npc, states[npc].currentId)
   return {
-    dialogue: passPrereq(npc, currentDialogue) ? getDialogueWithPrompts(npc, currentDialogue) : getDialogue(npc, currentDialogue.preId)
+    dialogue: passPrereq(currentDialogue)
+      ? getDialogueWithPrompts(npc, currentDialogue) : getDialogue(npc, currentDialogue.preId),
   }
 }
 
-function considerDialogue (npc, dialogue) {
+function considerDialogue(npc, dialogue) {
   if (dialogue.post) {
     dialogue.post()
   }
   const nextDialogue = getDialogue(npc, dialogue.next)
-  if (!passPrereq(npc, nextDialogue)) {
+  if (!passPrereq(nextDialogue)) {
     states[npc].currentId = nextDialogue.preId
     return
   }
@@ -49,7 +52,7 @@ export const clearDialogue = (npc) => {
     dialogues[npc] = null
   }
   if (states[npc]) {
-    states[npc]['currentId'] = null
+    states[npc].currentId = null
     states[npc] = null
   }
 }
