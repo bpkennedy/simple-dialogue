@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Build
 'on':
   push:
   pull_request:
@@ -22,18 +22,22 @@ jobs:
         with:
           node-version: '${{ matrix.node }}'
       - uses: actions/checkout@v2
-      - name: 'Cache node_modules'
+      - name: 'Cache Node Modules'
         uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-v${{ matrix.node }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-v${{ matrix.node }}-
-      - name: Install Dependencies
+      - name: 'Install Dependencies'
         run: npm install
-      - name: Start Mocha Test Runner
+      - name: 'Lint Code'
+        run: npm run lint
+      - name: 'Run Tests'
         run: npm run test
-      - name: Test & publish code coverage
+      - name: 'Build Assets'
+        run: npm run build
+      - name: 'Publish Coverage'
         uses: paambaati/codeclimate-action@v3.0.0
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
