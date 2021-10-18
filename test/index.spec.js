@@ -60,33 +60,65 @@ describe('Dialogue', function() {
 
   it('should get initial dialogue', () => {
     const result = interactWith(MAYOR_LEONARD)
-    expect(result.dialogue).to.exist
+    expect(result).to.exist
   })
 
   it('should starts with the first item in the dialogues array', () => {
     const result = interactWith(MAYOR_LEONARD)
-    expect(result.dialogue.id).to.eql(1)
+    expect(result.id).to.eql(1)
   })
 
   it('should hydrate dialogue with choices with actual dialogues', () => {
     const result = interactWith(MAYOR_LEONARD)
-    expect(result.dialogue.choices).to.eql([2,3])
-    expect(result.dialogue.prompts.length).to.eql(2)
+    expect(result.choices).to.eql([2,3])
+    expect(result.prompts.length).to.eql(2)
   })
 
   it('should send in choice id to move the npc to the choice\'s next dialogue', () => {
     const initial = interactWith(MAYOR_LEONARD)
-    const choiceId = initial.dialogue.choices[0]
-    const choiceNextId = initial.dialogue.prompts[0].next
+    const choiceId = initial.choices[0]
+    const choiceNextId = initial.prompts[0].next
 
     const interacted = interactWith(MAYOR_LEONARD, choiceId)
 
-    expect(interacted.dialogue.id).to.eql(choiceNextId)
+    expect(interacted.id).to.eql(choiceNextId)
   })
+
+  // it('should not show dialogue if does not meet a defined prereq callback', () => {
+  //   let hasBigBossPassword = false
+  //   const hasTheKey = () => hasBigBossPassword === true
+  //
+  //   const testDialogue = [{
+  //     id: 1,
+  //     message: `I ain't talking to you`,
+  //     choices: [8]
+  //   }, {
+  //     id: 8,
+  //     pre: hasTheKey,
+  //     preId: 9,
+  //     message: 'Who do you work for!?',
+  //     next: 10
+  //   }, {
+  //     id: 9,
+  //     message: `I won't tell you nothin!`,
+  //   }, {
+  //     id: 10,
+  //     message: 'I work for Da Big Boss, now leggo my arm!',
+  //   }]
+  //
+  //   clearDialogue(MAYOR_LEONARD)
+  //   loadDialogue(MAYOR_LEONARD, testDialogue)
+  //   const initial = interactWith(MAYOR_LEONARD)
+  //   console.log(initial)
+  //   const demandChoice = initial.dialogue.choices[0]
+  //   console.log(demandChoice)
+  //   const demandResponse = interactWith(MAYOR_LEONARD, demandChoice)
+  //   expect(demandResponse.id).to.eql(9)
+  // })
 
   it('should see post callback run when dialogue choice action includes it', () => {
     const initial = interactWith(MAYOR_LEONARD)
-    const choiceId = initial.dialogue.choices[0]
+    const choiceId = initial.choices[0]
     expect(LeonardState[TOOK_MAYOR_QUEST_STATE]).to.eql(false)
 
     interactWith(MAYOR_LEONARD, choiceId)

@@ -1,7 +1,7 @@
 /**
  * Simple Dialogue contains in-memory management of branching dialogue web games
  */
-import { fastFilter, fastFind } from './util'
+import fastFind from './fastFind'
 
 /**
  * @typedef {Object} Dialogue
@@ -23,36 +23,44 @@ import { fastFilter, fastFind } from './util'
 const dialogues = {}
 const states = {}
 
-function getDialogueWithPrompts(npc, dialogue) {
-  const clonedDialogue = { ...dialogue }
-  if (clonedDialogue.choices.length) {
-    clonedDialogue.prompts = fastFilter(dialogues[npc],
-      (d) => clonedDialogue.choices.includes(d.id))
-  }
-  return clonedDialogue
+function setState(npc, key, id) {
+  states[npc][key] = id
 }
 
+function clearState(npc) {
+  states[npc] = null
+}
+
+const hydratePrompts = (npc, choices) => (dialogues[npc].filter((d) => choices.includes(d.id)))
 const passPrereq = (dialogue) => (dialogue.pre ? dialogue.pre() : true)
-const getDialogue = (npc, id) => (fastFind(dialogues[npc], 'id', id))
+const doPostReq = (dialogue) => (dialogue.post ? dialogue.post() : true)
+const hasNextLine = (dialogue) => (dialogue.next)
+const getDialogue = (npc, id) => (fastFind(dialogues[npc], (d) => d.id === id))
 
 function speakCurrentDialogue(npc) {
   const currentDialogue = getDialogue(npc, states[npc].currentId)
   return {
-    dialogue: passPrereq(currentDialogue)
-      ? getDialogueWithPrompts(npc, currentDialogue) : getDialogue(npc, currentDialogue.preId),
+    ...currentDialogue,
+    prompts: currentDialogue.choices.length ? hydratePrompts(npc, currentDialogue.choices) : [],
   }
 }
 
-function considerDialogue(npc, dialogue) {
-  if (dialogue.post) {
-    dialogue.post()
+function endConversation(npc) {
+  setState(npc, 'currentId', null)
+  return speakCurrentDialogue(npc)
+}
+
+function playerUnqualified(npc, dialogue) {
+  if (!dialogue.preId) {
+    throw new Error('No conversation option when player doesn\'t qualify for prerequisite!')
   }
-  const nextDialogue = getDialogue(npc, dialogue.next)
-  if (!passPrereq(nextDialogue)) {
-    states[npc].currentId = nextDialogue.preId
-    return
-  }
-  states[npc].currentId = nextDialogue.id
+  setState(npc, 'currentId', dialogue.preId)
+  return speakCurrentDialogue(npc)
+}
+
+function goToNextDialogue(npc, processingDialogue) {
+  const nextDialogue = getDialogue(npc, processingDialogue.next)
+  setState(npc, 'currentId', nextDialogue.id)
 }
 
 /**
@@ -75,7 +83,18 @@ function considerDialogue(npc, dialogue) {
  */
 export const interactWith = (npc, choiceId) => {
   if (choiceId) {
-    considerDialogue(npc, getDialogue(npc, choiceId))
+    const processingDialogue = getDialogue(npc, choiceId)
+
+    if (!passPrereq(processingDialogue)) {
+      return playerUnqualified(npc, processingDialogue)
+    }
+
+    if (!hasNextLine(processingDialogue)) {
+      return endConversation(npc)
+    }
+
+    goToNextDialogue(npc, processingDialogue)
+    doPostReq(processingDialogue)
   }
   return speakCurrentDialogue(npc)
 }
@@ -146,7 +165,7 @@ export const clearDialogue = (npc) => {
     dialogues[npc] = null
   }
   if (states[npc]) {
-    states[npc].currentId = null
-    states[npc] = null
+    setState(npc, 'currentId', null)
+    clearState(npc)
   }
 }
