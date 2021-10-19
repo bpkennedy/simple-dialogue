@@ -80,7 +80,7 @@
   <body>
 
     <nav class="navbar" id="navbar">
-      <div class="navbar-heading" id="navbar-heading"><a href="index.html"><h2 class="navbar-heading-text">Simple Dialogue</h2></a></div><div class="sidebar-main-content" id="sidebar-main-content"><div class="accordion collapsed" id="364252" > <h3 class="accordion-heading">Global<svg><use xlink:href="#down-icon"></use></svg></h3><ul class="accordion-content"><li class="accordion-list" id=""><a href="global.html#clearDialogue">clearDialogue</a></li><li class="accordion-list" id=""><a href="global.html#Dialogue">Dialogue</a></li><li class="accordion-list" id=""><a href="global.html#DialogueWithPrompts">DialogueWithPrompts</a></li><li class="accordion-list" id=""><a href="global.html#interactWith">interactWith</a></li><li class="accordion-list" id=""><a href="global.html#loadDialogue">loadDialogue</a></li></ul> </div></div>
+      <div class="navbar-heading" id="navbar-heading"><a href="index.html"><h2 class="navbar-heading-text">Simple Dialogue</h2></a></div><div class="sidebar-main-content" id="sidebar-main-content"><div class="accordion collapsed" id="2254346" > <h3 class="accordion-heading">Global<svg><use xlink:href="#down-icon"></use></svg></h3><ul class="accordion-content"><li class="accordion-list" id=""><a href="global.html#clearDialogue">clearDialogue</a></li><li class="accordion-list" id=""><a href="global.html#Dialogue">Dialogue</a></li><li class="accordion-list" id=""><a href="global.html#DialogueWithPrompts">DialogueWithPrompts</a></li><li class="accordion-list" id=""><a href="global.html#interactWith">interactWith</a></li><li class="accordion-list" id=""><a href="global.html#loadDialogue">loadDialogue</a></li></ul> </div></div>
       
 
     </nav>
@@ -252,7 +252,7 @@
         <div class="details-item-container">
             <dt class="tag-source">Source:</dt>
             <dd class="tag-source"><ul class="dummy"><li>
-                <a href="index.js.html">index.js</a>, <a href="index.js.html#line122">line 122</a>
+                <a href="index.js.html">index.js</a>, <a href="index.js.html#line180">line 180</a>
             </li></ul></dd>
         </div>
     
@@ -285,20 +285,9 @@
         
     <div class="rel">
     <pre class="prettyprint"><code>// assumes es6 modules import style
-import { loadDialogue } from 'simple-dialogue'
+import { clearDialogue } from 'simple-dialogue'
 
-const johnnyDialogues = [{
-   id: 1,
-   message: 'Hello?',
-   choices: [2]
- }, {
-   id: 2,
-   message: 'Nevermind.'
- }]
-
-loadDialogue('JohnnyBravo', johnnyDialogues)
-// some time later....
-clearDialogue('JohnnyBravo')</code></pre>
+clearDialogue('johnny')</code></pre>
     
     
     </div>
@@ -321,8 +310,8 @@ clearDialogue('JohnnyBravo')</code></pre>
 
 
     <div class="description">
-        <p>Interact with an npc will get the current line of dialogye or if choiceId
-argument is included will move the npc conversation to the next dialogue</p>
+        <p>Interact with an npc will get the current line of dialogue or if choice id
+argument is included then will move the npc conversation to the next dialogue</p>
     </div>
 
 
@@ -443,7 +432,7 @@ argument is included will move the npc conversation to the next dialogue</p>
         <div class="details-item-container">
             <dt class="tag-source">Source:</dt>
             <dd class="tag-source"><ul class="dummy"><li>
-                <a href="index.js.html">index.js</a>, <a href="index.js.html#line58">line 58</a>
+                <a href="index.js.html">index.js</a>, <a href="index.js.html#line104">line 104</a>
             </li></ul></dd>
         </div>
     
@@ -499,11 +488,13 @@ argument is included will move the npc conversation to the next dialogue</p>
     <pre class="prettyprint"><code>// assumes es6 modules import style
 import { interactWith } from 'simple-dialogue'
 
-const johnnyResponse = interactWith('JohnnyBravo')
+// load up dialogue (see other method)
+
+const johnnyResponse = interactWith('johnny')
 
 // or to send specific dialogue choice to Johnny
 
-const johnnyResponse = interactWith('JohnnyBravo', 5)</code></pre>
+const johnnyResponse = interactWith('johnny', 5)</code></pre>
     
     
     </div>
@@ -526,7 +517,7 @@ const johnnyResponse = interactWith('JohnnyBravo', 5)</code></pre>
 
 
     <div class="description">
-        <p>Load Dialogues for a specific npc</p>
+        <p>Load Dialogues for a specific npc/player conversation</p>
     </div>
 
 
@@ -603,7 +594,7 @@ const johnnyResponse = interactWith('JohnnyBravo', 5)</code></pre>
             
 
             <td class="description last"><p>An array of the Dialogues
-that the npc will speak to the user</p></td>
+that the npc and player will speak</p></td>
         </tr>
 
     
@@ -648,7 +639,7 @@ that the npc will speak to the user</p></td>
         <div class="details-item-container">
             <dt class="tag-source">Source:</dt>
             <dd class="tag-source"><ul class="dummy"><li>
-                <a href="index.js.html">index.js</a>, <a href="index.js.html#line83">line 83</a>
+                <a href="index.js.html">index.js</a>, <a href="index.js.html#line144">line 144</a>
             </li></ul></dd>
         </div>
     
@@ -684,27 +675,23 @@ that the npc will speak to the user</p></td>
 import { loadDialogue } from 'simple-dialogue'
 
 let johnnyRelationship = 60
+let playerXP = 2000
 let playerTookQuest = false
+
 const takeQuest = () => playerTookQuest = true
 const dislikePlayer = () => johnnyRelationship -= 10
+const isHighEnoughLevel = () => playerXP > 4000
 
-const johnnyDialogues = [{
-   id: 1,
-   message: 'Would you like to take my quest?',
-   choices: [2, 3]
- }, {
-   id: 2,
-   message: 'Sure, I\'ll take it.',
-   post: takeQuest,
-   next: 4
- }, {
-   id: 3,
-   message: 'Nah, not worth my time.',
-   post: dislikePlayer,
-   next: 5
- }]
+const johnnyDialogues = [
+   {id: 1, message: `Would you like to take my quest?`, choices: [2, 3]},
+   {id: 2, message: `Sure, I'll take it.`, pre: isHighEnoughLevel, preId: 5, post: takeQuest, next: 4},
+   {id: 3, message: `Nah, not worth my time.`, post: dislikePlayer, next: 6},
+   {id: 4, message: `Great! Go get me 300 chickens.`, next: null},
+   {id: 5, message: `Hold up, come back after you've farmed a bit more.`, next: 1}
+   {id: 6, message: `Thanks for nothing, buddy.`, next: null}
+]
 
-loadDialogue('JohnnyBravo', johnnyDialogues)</code></pre>
+loadDialogue('johnny', johnnyDialogues)</code></pre>
     
     
     </div>
@@ -857,8 +844,39 @@ loadDialogue('JohnnyBravo', johnnyDialogues)</code></pre>
 
             
 
-            <td class="description last"><p>array of dialogueIds that will be presented as
-choice prompts with this dialogue</p></td>
+            <td class="description last"><p>array of dialogues ids representing the choices
+the player will be given.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>next</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>optional id of the next dialogue (required if no choices)</p></td>
         </tr>
 
     
@@ -920,8 +938,8 @@ choice prompts with this dialogue</p></td>
 
             
 
-            <td class="description last"><p>optional dialogue Id to use instead if using
-prerequisite function and prerequisite is false</p></td>
+            <td class="description last"><p>optional dialogue id to redirect to if pre fails
+(required if using pre)</p></td>
         </tr>
 
     
@@ -1126,7 +1144,7 @@ prerequisite function and prerequisite is false</p></td>
         <div class="details-item-container">
             <dt class="tag-source">Source:</dt>
             <dd class="tag-source"><ul class="dummy"><li>
-                <a href="index.js.html">index.js</a>, <a href="index.js.html#line18">line 18</a>
+                <a href="index.js.html">index.js</a>, <a href="index.js.html#line19">line 19</a>
             </li></ul></dd>
         </div>
     
