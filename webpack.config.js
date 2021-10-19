@@ -1,6 +1,5 @@
 const CompressionPlugin = require('compression-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const nodeExternals = require('webpack-node-externals')
 const zlib = require('zlib')
 const path = require('path')
 
@@ -28,8 +27,8 @@ const generalConfig = {
         threshold: 1,
         minRatio: Infinity,
         deleteOriginalAssets: false
-      }
-    )],
+    })
+  ],
   module: {
     rules: [
       {
@@ -43,7 +42,7 @@ const generalConfig = {
 
 const moduleConfig = {
   entry: path.resolve(__dirname, './src/index.js'),
-  target: ['web', 'es2017'],
+  target: ['web', 'es2021'],
   output: {
     path: path.resolve(__dirname, './dist'),
     filename: 'compiled.es6.js',
@@ -60,7 +59,6 @@ const moduleConfig = {
 const nodeConfig = {
   entry: path.resolve(__dirname, './src/index.js'),
   target: 'node',
-  externals: [nodeExternals()],
   output: {
     path: path.resolve(__dirname, './dist'),
     filename: 'compiled.node.js',
