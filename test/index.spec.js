@@ -1,127 +1,245 @@
 import { expect } from 'chai'
 import { interactWith, loadDialogue, clearDialogue } from '../src/index'
 
-const MAYOR_LEONARD = 'mayorLeonard'
-const TOOK_MAYOR_QUEST_STATE = 'tookMayorQuest'
-const COMPLETED_MAYOR_QUEST_STATE = 'completedMayorQuest'
-const MAYOR_LIKES_YOU_STATE = 'mayorLikes'
+function stripPrompts(dialogue) {
+  const clone = { ...dialogue }
+  delete clone.prompts
+  return clone
+}
 
-const initialLeonardState = () => ({
-  [TOOK_MAYOR_QUEST_STATE]: false,
-  [COMPLETED_MAYOR_QUEST_STATE]: false,
-  [MAYOR_LIKES_YOU_STATE]: true
-})
+function malformedError(id) {
+  return `simple-dialogue: malformed Dialogue object for dialogueId: ${id}.
+      Please ensure your objects have the required fields.
 
-let LeonardState = initialLeonardState()
-
-const takeQuest = () => LeonardState[TOOK_MAYOR_QUEST_STATE] = true
-const dislikePlayer = () => LeonardState[MAYOR_LIKES_YOU_STATE] = false
-const isQuestUnfinished = () => LeonardState[TOOK_MAYOR_QUEST_STATE] === true && LeonardState[COMPLETED_MAYOR_QUEST_STATE] === false
-
-const LeonardDialogues = [{
-  id: 1,
-  message: 'Would you like to take my quest?',
-  choices: [2, 3]
-}, {
-  id: 2,
-  message: 'Sure, I\'ll take it.',
-  post: takeQuest,
-  next: 4
-}, {
-  id: 3,
-  message: 'Nah, not worth my time.',
-  post: dislikePlayer,
-  next: 5
-}, {
-  id: 4,
-  pre: isQuestUnfinished,
-  preId: 7,
-  message: 'Fantastic news! I\'ll send word for them to expect you.',
-  choices: [6]
-}, {
-  id: 5,
-  message: 'Suit yourself.',
-  choices: [6]
-}, {
-  id: 6,
-  message: 'Goodbye.'
-}, {
-  id: 7,
-  message: 'Uh, shouldn\'t you be out helping those villagers?'
-}]
+      Example:
+      {
+        id: 1, // required number
+        message: '', // required
+        choices: [1,2,3], // optional, array of numbers
+        next: 1 // required number, if no choices
+        pre: () => {},  // optional
+        preId: 1, // required number, if using pre
+        post: () => {}, // optional
+      }`
+}
 
 describe('Dialogue', function() {
 
-  beforeEach(() => {
-    clearDialogue(MAYOR_LEONARD)
-    LeonardState = initialLeonardState()
-    loadDialogue(MAYOR_LEONARD, LeonardDialogues)
+  describe('when player does interactWith', function() {
+    it('should get initial dialogue as index 0 of array', () => {
+      const firstId = 1
+      const dialogues = [
+        {id: firstId, message: 'Would you like to take my quest?', choices: [2]},
+        {id: 2, message: 'Sure will!', next: 3},
+        {id: 3, message: 'Great, thank you!', next: null}
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      expect(stripPrompts(result)).to.eql(dialogues.find(d => d.id === firstId))
+      clearDialogue('leonard')
+    })
+
+    it('should hydrate dialogue choices in the prompts field', () => {
+      const dialogues = [
+        {id: 1, message: 'Would you like to take my quest?', choices: [2]},
+        {id: 2, message: 'Sure will!', next: 3}
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      const hydratedDialogue = {
+        ...result,
+        prompts: [dialogues.find(d => d.id === result.prompts[0].id)]
+      }
+
+      expect(result).to.eql(hydratedDialogue)
+      clearDialogue('leonard')
+    })
+
+    it('should get the same dialogue if no choices are sent', function() {
+      const dialogues = [
+        {id: 1, message: 'Would you like to take my quest?', choices: [2]},
+        {id: 2, message: 'Sure will!', next: 3},
+        {id: 3, message: 'Great, thank you!', next: null}
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      expect(stripPrompts(result)).to.eql(dialogues.find(d => d.id === 1))
+      const result2 = interactWith('leonard')
+      expect(stripPrompts(result2)).to.eql(dialogues.find(d => d.id === 1))
+      clearDialogue('leonard')
+    })
+
+    it('should return empty choices array if user loaded dialogue choices as empty', () => {
+      const dialogues = [
+        {id: 1, message: 'Would you like to take my quest?', choices: []},
+        {id: 2, message: 'Sure will!', next: 3},
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      expect(stripPrompts(result)).to.eql(dialogues.find(d => d.id === 1))
+    })
+
+    it('should not go to next dialogue if choice\'s next is set to null or undefined', () => {
+      const dialogues = [
+        {id: 1, message: 'Would you like to get stuck in dialogue?', choices: [2]},
+        {id: 2, message: 'Uh...', next: null},
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      const secondResult = interactWith('leonard', result.prompts[0].id)
+      expect(stripPrompts(secondResult)).to.eql(dialogues.find(d => d.id === 1))
+    })
   })
 
-  it('should get initial dialogue', () => {
-    const result = interactWith(MAYOR_LEONARD)
-    expect(result).to.exist
-  })
+  describe('when player does interactWith with a choice', function() {
+    it('should move the npc dialogue to the next dialogue', () => {
+      const dialogues = [
+        {id: 1, message: 'Would you like to take my quest?', choices: [2]},
+        {id: 2, message: 'Sure will!', next: 3},
+        {id: 3, message: 'Awesome, be back after you kill those twenty three chickens.', next: null}
+      ]
 
-  it('should starts with the first item in the dialogues array', () => {
-    const result = interactWith(MAYOR_LEONARD)
-    expect(result.id).to.eql(1)
-  })
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      const secondResult = interactWith('leonard', result.prompts[0].id)
+      expect(stripPrompts(secondResult)).to.eql(dialogues.find(d => d.id === result.prompts[0].next))
+      clearDialogue('leonard')
+    })
 
-  it('should hydrate dialogue with choices with actual dialogues', () => {
-    const result = interactWith(MAYOR_LEONARD)
-    expect(result.choices).to.eql([2,3])
-    expect(result.prompts.length).to.eql(2)
-  })
+    it('should throw error if required Dialogue keys are missing', () => {
+      const malformeds = {
+        'choiceStrings': [{ id: 1, message: 'Strings instead of numbers for choices', choices: ['2'] }],
+        'noId': [{ message: 'Strings instead of numbers for choices', choices: [2] }],
+        'noMessage': [{ id: 1, choices: [2] }],
+        'noRequiredNext': [{ id: 1, message: 'Strings instead of numbers for choices' }],
+        'noPreIdWhenPre': [{ id: 1, message: 'Strings instead of numbers for choices', next: 3, pre: () => ({}) }],
+      }
 
-  it('should send in choice id to move the npc to the choice\'s next dialogue', () => {
-    const initial = interactWith(MAYOR_LEONARD)
-    const choiceId = initial.choices[0]
-    const choiceNextId = initial.prompts[0].next
+      for (const key of Object.keys(malformeds)) {
+        expect(() => loadDialogue('dude', malformeds[key])).to.throw(malformedError(malformeds[key][0].id || 'undefined'))
+        clearDialogue('dude')
+      }
+    })
 
-    const interacted = interactWith(MAYOR_LEONARD, choiceId)
+    it('should return error message if character does not exist when calling loadDialogue', () => {
+      loadDialogue('someRealGuy', [{ id: 1, message: 'Hello', next: 3 }])
+      expect(() => interactWith('noExistsGuy')).to.throw('simple-dialog: No dialogue found for noExistsGuy. Did you use loadDialogue() to create some?')
+      clearDialogue('someRealGuy')
+    })
 
-    expect(interacted.id).to.eql(choiceNextId)
-  })
+    it('should silently continue if character does not exist when calling clearDialogue', () => {
+      loadDialogue('someRealGuy', [{ id: 1, message: 'Hello', next: 3 }])
+      expect(() => clearDialogue('noExistsGuy')).not.to.throw
+      clearDialogue('someRealGuy')
+    })
 
-  // it('should not show dialogue if does not meet a defined prereq callback', () => {
-  //   let hasBigBossPassword = false
-  //   const hasTheKey = () => hasBigBossPassword === true
-  //
-  //   const testDialogue = [{
-  //     id: 1,
-  //     message: `I ain't talking to you`,
-  //     choices: [8]
-  //   }, {
-  //     id: 8,
-  //     pre: hasTheKey,
-  //     preId: 9,
-  //     message: 'Who do you work for!?',
-  //     next: 10
-  //   }, {
-  //     id: 9,
-  //     message: `I won't tell you nothin!`,
-  //   }, {
-  //     id: 10,
-  //     message: 'I work for Da Big Boss, now leggo my arm!',
-  //   }]
-  //
-  //   clearDialogue(MAYOR_LEONARD)
-  //   loadDialogue(MAYOR_LEONARD, testDialogue)
-  //   const initial = interactWith(MAYOR_LEONARD)
-  //   console.log(initial)
-  //   const demandChoice = initial.dialogue.choices[0]
-  //   console.log(demandChoice)
-  //   const demandResponse = interactWith(MAYOR_LEONARD, demandChoice)
-  //   expect(demandResponse.id).to.eql(9)
-  // })
+    describe('when prereq is used', function() {
+      it('should not show dialogue if prereq returns false', () => {
+        let hasBrassKnuckles = false
+        const hasTheKey = () => hasBrassKnuckles === true
 
-  it('should see post callback run when dialogue choice action includes it', () => {
-    const initial = interactWith(MAYOR_LEONARD)
-    const choiceId = initial.choices[0]
-    expect(LeonardState[TOOK_MAYOR_QUEST_STATE]).to.eql(false)
+        const dialogue = [
+          {id: 1, message: `I ain't talking to you`, choices: [2]},
+          {id: 2, pre: hasTheKey, preId: 4, message: 'Who do you work for!?', next: 3},
+          {id: 3, message: `I work for Da Big Boss.`, next: 1},
+          {id: 4, message: `I ain't tellin you nothin!`, next: 1}
+        ]
 
-    interactWith(MAYOR_LEONARD, choiceId)
-    expect(LeonardState[TOOK_MAYOR_QUEST_STATE]).to.eql(true)
+        loadDialogue('goon', dialogue)
+        const initial = interactWith('goon')
+        const playerChoiceId = initial.prompts[0].id
+        const playerFailPrereqId = initial.prompts[0].preId
+        const demandResponse = interactWith('goon', playerChoiceId)
+        expect(stripPrompts(demandResponse)).to.eql(dialogue.find(d => d.id === playerFailPrereqId))
+        clearDialogue('goon')
+      })
+
+      it('should show next dialogue if prereq is true', () => {
+        let hasBrassKnuckles = true
+        const hasTheKey = () => hasBrassKnuckles === true
+
+        const dialogue = [
+          {id: 1, message: `I ain't talking to you`, choices: [2]},
+          {id: 2, pre: hasTheKey, preId: 4, message: 'Who do you work for!?', next: 3},
+          {id: 3, message: `I work for Da Big Boss.`, next: 1},
+          {id: 4, message: `I ain't tellin you nothin!`, next: 1}
+        ]
+
+        loadDialogue('goon', dialogue)
+        const initial = interactWith('goon')
+        const playerChoiceId = initial.prompts[0].id
+        const demandResponse = interactWith('goon', playerChoiceId)
+        expect(stripPrompts(demandResponse)).to.eql(dialogue.find(d => d.id === initial.prompts[0].next))
+        clearDialogue('goon')
+      })
+    })
+
+    describe('when postreq is used', function() {
+      it('should experience the postreq callback effects', () => {
+        const originalPlayerMoney = 10
+        const npcMoney = 50
+        let expectedMoney
+        const getNpcQuestMoney = () => expectedMoney = originalPlayerMoney + npcMoney
+
+        const dialogue = [
+          {id: 1, message: `You want some money?`, choices: [2,3]},
+          {id: 2, message: 'Why, yes, thank you.', post: getNpcQuestMoney, next: 4},
+          {id: 3, message: `I don't need your charity!`, next: 5},
+          {id: 4, message: `Enjoy your money!`, next: null},
+          {id: 5, message: `Gees, you try and help somebody...`, next: null}
+        ]
+
+        loadDialogue('johnny', dialogue)
+        const initial = interactWith('johnny')
+        const playerChoiceId = initial.prompts[0].id
+        const offerResponse = interactWith('johnny', playerChoiceId)
+        expect(stripPrompts(offerResponse)).to.eql(dialogue.find(d => d.id === initial.prompts[0].next))
+        expect(expectedMoney).to.eql(originalPlayerMoney + npcMoney)
+        clearDialogue('johnny')
+      })
+    })
+
+    describe('when pre and post are used together', function() {
+      it('should perform full example', () => {
+        let johnnyRelationship = 60
+        let playerXP = 2000
+        let playerTookQuest = false
+
+        const takeQuest = () => playerTookQuest = true
+        const dislikePlayer = () => johnnyRelationship -= 10
+        const isHighEnoughLevel = () => playerXP > 4000
+
+        const dialogues = [
+          {id: 1, message: `Would you like to take my quest?`, choices: [2, 3]},
+          {id: 2, message: `Sure, I'll take it.`, pre: isHighEnoughLevel, preId: 5, post: takeQuest, next: 4},
+          {id: 3, message: `Nah, not worth my time.`, post: dislikePlayer, next: 6},
+          {id: 4, message: `Great! Go get me 300 chickens.`, next: null},
+          {id: 5, message: `Hold up, come back after you've farmed a bit more.`, next: 1},
+          {id: 6, message: `Thanks for nothing, buddy.`, next: null}
+        ]
+
+        loadDialogue('johnny', dialogues)
+        const initial = interactWith('johnny')
+        const tryAccept = interactWith('johnny', initial.prompts[0].id)
+        expect(stripPrompts(tryAccept)).to.eql(dialogues.find(d => d.id === initial.prompts[0].preId))
+
+        expect(playerTookQuest).to.be.false
+        playerXP = 5000  // player goes and gets better...
+
+        const secondTalk = interactWith('johnny')
+        expect(secondTalk).to.eql(initial)
+        const tryAccept2 = interactWith('johnny', secondTalk.prompts[0].id)
+
+        expect(stripPrompts(tryAccept2)).to.eql(dialogues.find(d => d.id === secondTalk.prompts[0].next))
+        expect(playerTookQuest).to.be.true
+
+        clearDialogue('johnny')
+      })
+    })
   })
 })

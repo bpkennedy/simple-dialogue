@@ -14,7 +14,7 @@
     "prepare": "npm run build",
     "build": "./node_modules/.bin/webpack",
     "lint": "./node_modules/.bin/eslint ./src --fix",
-    "test": "./node_modules/.bin/mocha --require @babel/register --recursive --timeout=3000",
+    "test": "./node_modules/.bin/mocha --config .mocharc.js",
     "coverage": "./node_modules/.bin/nyc --reporter=lcov --reporter=text ./node_modules/.bin/mocha --require @babel/register --recursive --timeout=3000",
     "publish": "git push --tags && npm publish",
     "docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
