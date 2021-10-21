@@ -80,7 +80,7 @@
   <body>
 
     <nav class="navbar" id="navbar">
-      <div class="navbar-heading" id="navbar-heading"><a href="index.html"><h2 class="navbar-heading-text">Simple Dialogue</h2></a></div><div class="sidebar-main-content" id="sidebar-main-content"><div class="accordion collapsed" id="2254346" > <h3 class="accordion-heading">Global<svg><use xlink:href="#down-icon"></use></svg></h3><ul class="accordion-content"><li class="accordion-list" id=""><a href="global.html#clearDialogue">clearDialogue</a></li><li class="accordion-list" id=""><a href="global.html#Dialogue">Dialogue</a></li><li class="accordion-list" id=""><a href="global.html#DialogueWithPrompts">DialogueWithPrompts</a></li><li class="accordion-list" id=""><a href="global.html#interactWith">interactWith</a></li><li class="accordion-list" id=""><a href="global.html#loadDialogue">loadDialogue</a></li></ul> </div></div>
+      <div class="navbar-heading" id="navbar-heading"><a href="index.html"><h2 class="navbar-heading-text">Simple Dialogue</h2></a></div><div class="sidebar-main-content" id="sidebar-main-content"><div class="accordion collapsed" id="7246687" > <h3 class="accordion-heading">Global<svg><use xlink:href="#down-icon"></use></svg></h3><ul class="accordion-content"><li class="accordion-list" id=""><a href="global.html#clearDialogue">clearDialogue</a></li><li class="accordion-list" id=""><a href="global.html#Dialogue">Dialogue</a></li><li class="accordion-list" id=""><a href="global.html#DialogueWithPrompts">DialogueWithPrompts</a></li><li class="accordion-list" id=""><a href="global.html#interactWith">interactWith</a></li><li class="accordion-list" id=""><a href="global.html#loadDialogue">loadDialogue</a></li></ul> </div></div>
       
 
     </nav>
@@ -117,8 +117,200 @@
 <p><img src="https://github.com/bpkennedy/simple-dialogue/actions/workflows/test.yml/badge.svg" alt="Build">
 <a href="https://codeclimate.com/github/bpkennedy/simple-dialogue/test_coverage"><img src="https://api.codeclimate.com/v1/badges/49fc150e78f4127c02a1/test_coverage" alt="Coverage"></a>
 <a href="https://deepscan.io/dashboard#view=project&amp;tid=15720&amp;pid=18948&amp;bid=477054"><img src="https://deepscan.io/api/teams/15720/projects/18948/branches/477054/badge/grade.svg" alt="DeepScan grade"></a>
-<img src="https://img.shields.io/badge/gzip%20size-188%20Bytes-brightgreen.svg" alt=""></p>
-<p>A dead simple branching dialogue system written in javascript for RPG and visual novel games</p></article>
+<img src="https://img.shields.io/badge/gzip%20size-1349%20Bytes-brightgreen.svg" alt=""></p>
+<p>A dead simple, zero-dependency, branching dialogue system written in javascript for RPG and visual novel games</p>
+<h2>Purpose</h2>
+<p>After trying out a few different libraries that do similar branching dialogue
+for npc conversations and reading some material(<a href="%5Bhttps://www.gamedeveloper.com/design/branching-conversation-systems-and-the-working-writer-part-1-introduction%5D(https://www.gamedeveloper.com/design/branching-conversation-systems-and-the-working-writer-part-1-introduction)">1</a>) about various approaches
+to this (hub and spoke, waterfall models), I wanted to write something that allowed
+flexibility. Specifically I wanted a couple lifecycle hooks
+(this is where <code>pre</code> and <code>post</code> come in), and I also wanted dialogue system itself
+to not concern itself with managing as little state internally as it could to provide
+the basics.</p>
+<h2>Install</h2>
+<p>From your project directory on the commandline/terminal:</p>
+<pre class="prettyprint source lang-bash"><code>npm install --save simple-dialogue
+</code></pre>
+<h2>Setup</h2>
+<h3>As es6 module:</h3>
+<pre class="prettyprint source lang-javascript"><code>import { loadDialogue, interactWith, clearDialogue } from 'simple-dialogue'
+</code></pre>
+<h3>As node/es5:</h3>
+<pre class="prettyprint source lang-javascript"><code>const { loadDialogue, interactWith, clearDialogue } = require('simple-dialogue')
+</code></pre>
+<h3>As browser script:</h3>
+<pre class="prettyprint source lang-html"><code>&lt;script src=&quot;https://cdn.jsdelivr.net/gh/bpkennedy/simple-dialogue@1.0.0/dist/compiled.browser.js&quot;>&lt;/script>
+</code></pre>
+<h2>Usage</h2>
+<p>A <em>Dialogue</em> means a single &quot;unit&quot; of dialogue, spoken by either an npc or the player, in a larger
+conversation (many Dialogues). If you could break a conversation down into &quot;turns speaking&quot;, then each turn would be
+a Dialogue.</p>
+<p>A Dialogue has an interface like this:</p>
+<pre class="prettyprint source lang-javascript"><code>{
+    id: 1, // required, unique number
+    message: '', // required, string
+    choices: [1,2,3],
+    next: 1,
+    pre: () => {},
+    preId: 1,
+    post: () => {}
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>number</td>
+<td>required</td>
+<td>a unique id</td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>string</td>
+<td>required</td>
+<td>any string, template literals are supported</td>
+</tr>
+<tr>
+<td><code>choices</code></td>
+<td>number[]</td>
+<td>optional</td>
+<td>array of other dialogue <code>id</code>'s</td>
+</tr>
+<tr>
+<td><code>next</code></td>
+<td>number</td>
+<td>required/optional</td>
+<td>the next dialogue <code>id</code> to go to. optional, but <strong>required if <code>choices</code> is empty or omitted</strong></td>
+</tr>
+<tr>
+<td><code>pre</code></td>
+<td>function</td>
+<td>optional</td>
+<td>your callback function. Must return truthy or falsy. Will not go to <code>next</code> if <code>pre</code> fails</td>
+</tr>
+<tr>
+<td><code>preId</code></td>
+<td>number</td>
+<td>required/optional</td>
+<td>if <code>pre</code> fails, this is the dialogue <code>id</code> to redirect to. optional, but <strong>required if <code>pre</code> is used</strong></td>
+</tr>
+<tr>
+<td><code>post</code></td>
+<td>function</td>
+<td>optional</td>
+<td>your callback function. No return needed, does not effect whether going to <code>next</code> or not</td>
+</tr>
+</tbody>
+</table>
+<h2>Lifecycle hooks</h2>
+<h3><code>pre</code> (prerequisite):</h3>
+<p>will be run when it's dialogue is being processed by the npc. By returning a falsy or truthy value,
+you can control the conversation branching to one dialogue or another (or not moving forward at all).</p>
+<pre class="prettyprint source lang-javascript"><code>const isHighEnoughLevel = () => somePlayer.someProperty === 'somePrerequisiteValue'
+
+{id: 1, message: `Would you like to take my quest?`, choices: [2]},
+{id: 2, message: `Sure, I'll take it.`, pre: isHighEnoughLevel, preId: 5, next: 4},
+</code></pre>
+<p>When the npc presents the message &quot;Would you like to take my quest?&quot;, and your choice is
+&quot;Sure, I'll take it.&quot;, the <code>isHighEnoughLevel</code> callback that you
+provided is evaluated - perhaps it's based on some attribute or item of your player - and if truthy, the <code>next</code>
+dialogue is loaded for the npc next.  If it is falsy, then the <code>preId</code> dialogue is loaded.</p>
+<h3><code>post</code> (postrequisite):</h3>
+<p>will be run after the npc has processed and loaded the next dialogue. The return of this function is not used by the
+npc (or this library). It's purely for your code to use for setting your own state and game logic at specific points
+during the conversation.</p>
+<pre class="prettyprint source lang-javascript"><code>const takeQuest = () => somePlayer.someStatus = 'acceptedChickenQuest'
+
+{id: 1, message: `Will you catch my runaway chickens?!`, choices: [2]},
+{id: 2, message: `Sure, I'll get'em.`, post: takeQuest, next: 3},
+</code></pre>
+<h2>Ending and Restarting conversation</h2>
+<p>To indicate that a conversation is complete, set a dialogue's <code>next</code> to be null or undefined. This can be done on
+either a player choice kind of dialogue or a npc response kind of dialogue. When the npc processes a dialogue with
+<code>next</code> set as null/undefined, it will default to using the last dialogue that it had responded with.</p>
+<p>In this way, you may have flexibility in that an npc end conversation in waterfall style fashion (i.e. player only gets the last thing
+that an npc said and cannot 'retry' the conversation):</p>
+<pre class="prettyprint source lang-javascript"><code>// ------a player choice ending a conversation--------
+{id: 1, message: 'You doing alright?', choices: [2,3]},
+{id: 2, message: 'Yea', next: null},
+{id: 3, message: 'No', next: null},
+
+interact('guy')
+// provides: You doing alright?
+// provides choice #2:  Yea
+// provides choice #3:  No
+
+interact('guy', 2)
+interact('guy') // provides: You doing alright?
+
+// -------an npc ending the conversation---------
+{id: 1, message: `Will you catch my runaway chickens?!`, choices: [2]},
+{id: 2, message: `No, I hate chickens, and I hate you.`, next: 3},
+{id: 3, message: `You are such a disappointment`, next: null}
+
+interact('guy')
+// provides: Will you catch my runaway chickens?
+// provides choice #2:  No, I hate chickens, and I hate you.
+
+interact('guy', 2) // provides: You are such a disappointment.
+
+interact('guy') // provides repeat: You are such a disappointment.
+</code></pre>
+<p>or you can retry an npc conversation in the hub-and-spoke style (i.e. player can retry conversation to explore
+other choices) by setting a previous dialogue id rather than null to loop your conversation:</p>
+<pre class="prettyprint source lang-javascript"><code>{id: 1, message: `Will you catch my runaway chickens?!`, choices: [2,3]},
+{id: 2, message: `No, I hate chickens, and I hate you.`, next: 4},
+{id: 3, message: `Yes.`, next: 5},
+{id: 4, message: `Huh, come back when you're ready to help`, next: 1}, // routes back to beginning
+{id: 5, message: `Thanks for taking my quest! Come see me when you have it finished!`, next: null},
+
+interact('guy')
+// provides: Will you catch my runaway chickens?!
+// provides choice #2:  No, I hate chickens, and I hate you.
+// provides choice #3:  Yes.
+
+interact('guy', 2) // provides: Huh, come back when you're ready to help
+
+interact('guy') // provides reset: Will you catch my runaway chickens?!
+</code></pre>
+<h3>Development</h3>
+<p>Want to contribute? Great! To fix a bug or enhance a feature, follow these steps:</p>
+<ul>
+<li>Fork the repo</li>
+<li>Create a new branch (<code>git checkout -b improve-feature</code>)</li>
+<li>Make the appropriate changes in the files</li>
+<li>Ensure that linting and tests pass, and that coverage is at 100%.
+<ul>
+<li><code>npm run prepull</code></li>
+</ul>
+</li>
+<li>Add changes to reflect the changes made</li>
+<li>Commit your changes (<code>git commit -am 'Improve feature'</code>)</li>
+<li>Push to the branch (<code>git push origin improve-feature</code>)</li>
+<li>Create a Pull Request</li>
+</ul>
+<h3>Bug / Feature Request</h3>
+<p>If you find a bug, kindly open an issue <a href="https://github.com/bpkennedy/simple-dialogue/issues/new">here</a>.</p>
+<p>If you'd like to request new functionality or feature, feel free to do so by opening an issue <a href="https://github.com/bpkennedy/simple-dialogue/issues/new">here</a>. Please describe the functionality or feature you'd like to see.</p>
+<h2>To-do</h2>
+<ul>
+<li>Add non-literal dialogue choices:</li>
+</ul>
+<pre class="prettyprint source lang-javascript"><code>{id: 1, message: `Will you catch my runaway chickens?!`, choices: [2]},
+{id: 2, mask: '[Angry Negative]', message: `No, I hate chickens, and I hate you.`, next: 4},
+// the 'mask' property could be what is displayed to the player, but the message is the literal line
+// as they'll see it - providing interest and color in their player &quot;coming alive&quot;.
+</code></pre>
+<h2><a href="https://github.com/bpkennedy/simple-dialogue/blob/main/LICENSE.md">License</a></h2>
+<p>MIT © <a href="https://github.com/bpkennedy">Brian Kennedy</a></p></article>
     </section>
 
 

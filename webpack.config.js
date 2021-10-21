@@ -5,6 +5,9 @@ const path = require('path')
 
 const generalConfig = {
   mode: 'production',
+  optimization: {
+    sideEffects: false,
+  },
   plugins: [
     new CleanWebpackPlugin({
       cleanStaleWebpackAssets: false,
@@ -14,7 +17,7 @@ const generalConfig = {
       filename: '[path][base].gz',
       algorithm: 'gzip',
       test: /\.js?$/,
-      threshold: 1,
+      threshold: 0,
       minRatio: Infinity,
     }),
     new CompressionPlugin({
@@ -24,7 +27,7 @@ const generalConfig = {
         compressionOptions: {
           [zlib.constants.BROTLI_PARAM_QUALITY]: 11
         },
-        threshold: 1,
+        threshold: 0,
         minRatio: Infinity,
         deleteOriginalAssets: false
     })
@@ -48,7 +51,6 @@ const moduleConfig = {
     filename: 'compiled.es6.js',
     library: {
       type: 'module',
-      export: 'default'
     },
   },
   experiments: {
@@ -63,8 +65,7 @@ const nodeConfig = {
     path: path.resolve(__dirname, './dist'),
     filename: 'compiled.node.js',
     library: {
-      type: 'commonjs',
-      export: 'default'
+      type: 'commonjs'
     },
   },
 };
@@ -75,13 +76,10 @@ const browserConfig = {
   output: {
     path: path.resolve(__dirname, './dist'),
     filename: 'compiled.browser.js',
-    globalObject: 'this',
     library: {
       name: 'SimpleDialogue',
-      type: 'umd',
-      export: 'default'
+      type: 'umd'
     },
-    umdNamedDefine: true,
   },
 };
 

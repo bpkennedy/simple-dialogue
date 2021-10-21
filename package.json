@@ -1,8 +1,9 @@
 {
   "name": "simple-dialogue",
-  "description": "A dead simple branching dialogue system written in javascript for RPG and visual novel games",
+  "description": "A dead simple, zero-dependency, branching dialogue system written in javascript for RPG and visual novel games",
   "version": "1.0.0",
-  "main": "./dist/compiled.browser.js",
+  "browser": "./dist/compiled.browser.js",
+  "main": "./dist/compiled.node.js",
   "module": "./dist/compiled.es6.js",
   "license": "MIT",
   "sideEffects": false,
@@ -16,6 +17,7 @@
     "lint": "./node_modules/.bin/eslint ./src --fix",
     "test": "./node_modules/.bin/mocha --config .mocharc.js",
     "coverage": "./node_modules/.bin/nyc --reporter=lcov --reporter=text ./node_modules/.bin/mocha --require @babel/register --recursive --timeout=3000",
+    "prepull": "npm run lint && npm run coverage",
     "publish": "git push --tags && npm publish",
     "docs": "node_modules/.bin/jsdoc --configure .jsdoc.json --verbose"
   },

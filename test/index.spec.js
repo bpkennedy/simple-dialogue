@@ -94,6 +94,50 @@ describe('Dialogue', function() {
       const secondResult = interactWith('leonard', result.prompts[0].id)
       expect(stripPrompts(secondResult)).to.eql(dialogues.find(d => d.id === 1))
     })
+
+    it('should always show the last loaded dialogue when player choice ends conversation', () => {
+      const dialogues = [
+        {id: 1, message: 'You doing alright?', choices: [2,3]},
+        {id: 2, message: 'Yea', next: null},
+        {id: 3, message: 'No', next: null},
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      interactWith('leonard', result.prompts[0].id)
+      const repeatedResult = interactWith('leonard')
+      expect(stripPrompts(repeatedResult)).to.eql(dialogues.find(d => d.id === 1))
+    })
+
+    it('should always show the last loaded dialogue when npc ends own conversation', () => {
+      const dialogues = [
+        {id: 1, message: 'You doing alright?', choices: [2,3]},
+        {id: 2, message: 'Yea', next: 4},
+        {id: 3, message: 'No', next: 4},
+        {id: 4, message: `Heh, I don't really care on way or the other.`, next: null},
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      interactWith('leonard', result.prompts[0].id)
+      const repeatedResult = interactWith('leonard')
+      expect(stripPrompts(repeatedResult)).to.eql(dialogues.find(d => d.id === 4))
+    })
+
+    it('should be able to have npc end conversation and reset itself to beginning', () => {
+      const dialogues = [
+        {id: 1, message: 'You doing alright?', choices: [2,3]},
+        {id: 2, message: 'Yea', next: 4},
+        {id: 3, message: 'No', next: 4},
+        {id: 4, message: `Heh, I don't really care on way or the other.`, next: 1},
+      ]
+
+      loadDialogue('leonard', dialogues)
+      const result = interactWith('leonard')
+      interactWith('leonard', result.prompts[0].id)
+      const repeatedResult = interactWith('leonard')
+      expect(stripPrompts(repeatedResult)).to.eql(dialogues.find(d => d.id === 1))
+    })
   })
 
   describe('when player does interactWith with a choice', function() {

@@ -80,7 +80,7 @@
   <body>
 
     <nav class="navbar" id="navbar">
-      <div class="navbar-heading" id="navbar-heading"><a href="index.html"><h2 class="navbar-heading-text">Simple Dialogue</h2></a></div><div class="sidebar-main-content" id="sidebar-main-content"><div class="accordion collapsed" id="2254346" > <h3 class="accordion-heading">Global<svg><use xlink:href="#down-icon"></use></svg></h3><ul class="accordion-content"><li class="accordion-list" id=""><a href="global.html#clearDialogue">clearDialogue</a></li><li class="accordion-list" id=""><a href="global.html#Dialogue">Dialogue</a></li><li class="accordion-list" id=""><a href="global.html#DialogueWithPrompts">DialogueWithPrompts</a></li><li class="accordion-list" id=""><a href="global.html#interactWith">interactWith</a></li><li class="accordion-list" id=""><a href="global.html#loadDialogue">loadDialogue</a></li></ul> </div></div>
+      <div class="navbar-heading" id="navbar-heading"><a href="index.html"><h2 class="navbar-heading-text">Simple Dialogue</h2></a></div><div class="sidebar-main-content" id="sidebar-main-content"><div class="accordion collapsed" id="7246687" > <h3 class="accordion-heading">Global<svg><use xlink:href="#down-icon"></use></svg></h3><ul class="accordion-content"><li class="accordion-list" id=""><a href="global.html#clearDialogue">clearDialogue</a></li><li class="accordion-list" id=""><a href="global.html#Dialogue">Dialogue</a></li><li class="accordion-list" id=""><a href="global.html#DialogueWithPrompts">DialogueWithPrompts</a></li><li class="accordion-list" id=""><a href="global.html#interactWith">interactWith</a></li><li class="accordion-list" id=""><a href="global.html#loadDialogue">loadDialogue</a></li></ul> </div></div>
       
 
     </nav>
@@ -171,7 +171,8 @@ function validateDialogue({
   if (checks.every((i) => i === true)) {
     return true
   }
-  const customError = `simple-dialogue: malformed Dialogue object for dialogueId: ${id}.  Please ensure your objects have the required fields.
+  const customError = `simple-dialogue: malformed Dialogue object for dialogueId: ${id}.
+      Please ensure your objects have the required fields.
 
       Example:
       {
@@ -223,10 +224,7 @@ function noCharacterExists(npc) {
  * // load up dialogue (see other method)
  *
  * const johnnyResponse = interactWith('johnny')
- *
- * // or to send specific dialogue choice to Johnny
- *
- * const johnnyResponse = interactWith('johnny', 5)
+ * const askJohnnyAboutFive = interactWith('johnny', 5)
  *
  */
 export const interactWith = (npc, choiceId) => {
