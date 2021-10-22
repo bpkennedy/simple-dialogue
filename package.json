@@ -2,6 +2,18 @@
   "name": "simple-dialogue",
   "description": "A dead simple, zero-dependency, branching dialogue system written in javascript for RPG and visual novel games",
   "version": "1.0.0",
+  "keywords": [
+    "branching",
+    "branching dialogue",
+    "dialogue",
+    "dialogue system",
+    "rpg",
+    "game",
+    "npc",
+    "conversation",
+    "hub and spoke",
+    "waterfall"
+  ],
   "browser": "./dist/compiled.browser.js",
   "main": "./dist/compiled.node.js",
   "module": "./dist/compiled.es6.js",
